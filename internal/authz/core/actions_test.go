@@ -19,7 +19,7 @@ func TestAllActions(t *testing.T) {
 	})
 
 	t.Run("returns expected action count", func(t *testing.T) {
-		expectedCount := 113 // Update this when intentionally adding/removing actions
+		expectedCount := 114 // Update this when intentionally adding/removing actions
 		if len(actions) != expectedCount {
 			t.Errorf("Expected %d actions, got %d. Update expected count if intentional.", expectedCount, len(actions))
 		}
@@ -88,6 +88,15 @@ func TestPublicActions(t *testing.T) {
 				t.Errorf("PublicActions() returned internal action: %s", action.Name)
 			}
 		}
+	})
+
+	t.Run("includes component release delete action", func(t *testing.T) {
+		for _, action := range actions {
+			if action.Name == "componentrelease:delete" {
+				return
+			}
+		}
+		t.Error("PublicActions() missing componentrelease:delete")
 	})
 }
 
