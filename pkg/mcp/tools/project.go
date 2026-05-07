@@ -79,3 +79,32 @@ func (t *Toolsets) RegisterCreateProject(s *mcp.Server, perms map[string]ToolPer
 		return handleToolResult(result, err)
 	})
 }
+
+func (t *Toolsets) RegisterUpdateProject(s *mcp.Server, perms map[string]ToolPermission) {
+	const name = "update_project"
+	perms[name] = ToolPermission{ToolName: name, Action: authzcore.ActionUpdateProject}
+
+	type updateProjectArgs struct {
+		NamespaceName      string `json:"namespace_name"`
+		ProjectName        string `json:"project_name"`
+		DeploymentPipeline string `json:"deployment_pipeline"`
+	}
+
+	inputSchema := createSchema(map[string]any{
+		"namespace_name": defaultStringProperty(),
+		"project_name": stringProperty(
+			"Name of the existing project to update. Use list_projects to discover valid names."),
+		"deployment_pipeline": stringProperty(
+			"Name of the DeploymentPipeline the project should use."),
+	}, []string{"namespace_name", "project_name", "deployment_pipeline"})
+
+	mcp.AddTool(s, &mcp.Tool{
+		Name:        name,
+		Description: "Update an existing project's deployment pipeline reference.",
+		InputSchema: inputSchema,
+	}, func(ctx context.Context, req *mcp.CallToolRequest, args updateProjectArgs) (*mcp.CallToolResult, any, error) {
+		result, err := t.ProjectToolset.UpdateProject(
+			ctx, args.NamespaceName, args.ProjectName, args.DeploymentPipeline)
+		return handleToolResult(result, err)
+	})
+}

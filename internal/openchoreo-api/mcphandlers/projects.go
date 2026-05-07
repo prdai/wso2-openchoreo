@@ -64,3 +64,24 @@ func (h *MCPHandler) CreateProject(ctx context.Context, namespaceName string, re
 	}
 	return mutationResult(created, "created"), nil
 }
+
+func (h *MCPHandler) UpdateProject(ctx context.Context, namespaceName, projectName, deploymentPipeline string) (any, error) {
+	project, err := h.services.ProjectService.GetProject(ctx, namespaceName, projectName)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedProject := project.DeepCopy()
+	updatedProject.Spec.DeploymentPipelineRef = openchoreov1alpha1.DeploymentPipelineRef{
+		Kind: openchoreov1alpha1.DeploymentPipelineRefKindDeploymentPipeline,
+		Name: deploymentPipeline,
+	}
+
+	updated, err := h.services.ProjectService.UpdateProject(ctx, namespaceName, updatedProject)
+	if err != nil {
+		return nil, err
+	}
+	return mutationResult(updated, "updated", map[string]any{
+		"deploymentPipelineRef": updated.Spec.DeploymentPipelineRef.Name,
+	}), nil
+}
